@@ -41,18 +41,15 @@ const DragAndDrop = () => {
   ]);
 
   const [currItem, setCurrItem] = useState<IItem | null>(null);
+  const [currBoard, setCurrBoard] = useState<IBoard | null>(null);
 
   const dargStartHandler = (
     e: React.DragEvent<HTMLDivElement>,
     board: IBoard,
     itemBoard: IItem
   ) => {
+    setCurrBoard(board);
     setCurrItem(itemBoard);
-    setBoards(
-      boards.map((boardItem) =>
-        changeBoard.id === boardItem.id ? changeBoard : boardItem
-      )
-    );
   };
 
   const dragLeaveHandler = (e: React.DragEvent<HTMLDivElement>) => {
@@ -76,12 +73,59 @@ const DragAndDrop = () => {
     item: IItem
   ) => {
     e.preventDefault();
-    board.items.push(item);
-    setBoards([...boards, board]);
+
+    const changeBoard = currBoard && {
+      ...currBoard,
+      items: currBoard?.items.filter((item) => item.id !== currItem?.id),
+    };
+
+    currItem && board.items.push(currItem);
+
+    setBoards(
+      boards.map((b) => {
+        if (b.id === board.id) {
+          return board;
+        }
+        if (b.id === changeBoard?.id) {
+          return changeBoard;
+        }
+        return b;
+      })
+    );
+  };
+
+  const dropBoardHandler = (
+    e: React.DragEvent<HTMLDivElement>,
+    board: IBoard
+  ) => {
+    currItem && board.items.push(currItem);
+
+    const changeBoard = currBoard && {
+      ...currBoard,
+      items: currBoard?.items.filter((item) => item.id !== currItem?.id),
+    };
+
+    setBoards(
+      boards.map((b) => {
+        if (b.id === board.id) {
+          return board;
+        }
+        if (b.id === changeBoard?.id) {
+          return changeBoard;
+        }
+        return b;
+      })
+    );
   };
 
   return boards.map((board) => (
-    <div className="board" key={board.id}>
+    <div
+      className="board"
+      key={board.id}
+      draggable={true}
+      onDrop={(e) => dropBoardHandler(e, board)}
+      onDragOver={dragOverHandler}
+    >
       <div className="board__title">{board.title}</div>
       {board.items.map((item) => (
         <div
